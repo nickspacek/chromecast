@@ -7,21 +7,23 @@
 		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
 		<script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
 
-    <script type="text/javascript">
-  var appId = 'ae241d56-0944-42ed-b6eb-06c314f5b5a0';
-	var receiver = new cast.receiver.Receiver(appId, [ 'ca.spacek.chromecase.test.aardvark' ], '', 5);
-	var remoteMedia = new cast.receiver.RemoteMedia();
-	remoteMedia.addChannelFactory(receiver.createChannelFactory(cast.receiver.RemoteMedia.NAMESPACE));
+		<script type="text/javascript">
+var appId = 'ae241d56-0944-42ed-b6eb-06c314f5b5a0';
+var receiver = new cast.receiver.Receiver(appId, [ 'ca.spacek.chromecase.test.aardvark' ], '', 5);
+var remoteMedia = new cast.receiver.RemoteMedia();
+remoteMedia.addChannelFactory(receiver.createChannelFactory(cast.receiver.RemoteMedia.NAMESPACE));
 
-	receiver.start();
+receiver.start();
 
-	window.addEventListener('load', function() {
-		var elem = document.getElementById('vid');
-		remoteMedia.setMediaElement(elem);
-	});
+window.addEventListener('load', function() {
+	var elem = document.getElementById('vid');
+	remoteMedia.setMediaElement(elem);
+});
 	</script>
 	</head>
 	<body>
-		<h1>Test!</h1>
+		<div class="container">
+			<h1>Test!</h1>
+		</div>
 	</body>
 </html>
