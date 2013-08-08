@@ -8,22 +8,27 @@
 		<script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
 
 		<script type="text/javascript">
+$(function () {
 var appId = 'ae241d56-0944-42ed-b6eb-06c314f5b5a0';
-var receiver = new cast.receiver.Receiver(appId, [ 'ca.spacek.chromecase.test.aardvark' ], '', 5);
-var remoteMedia = new cast.receiver.RemoteMedia();
-remoteMedia.addChannelFactory(receiver.createChannelFactory(cast.receiver.RemoteMedia.NAMESPACE));
-
+var receiver = new cast.receiver.Receiver(appId, [ 'ca.spacek.chromecast.test.aardvark' ], '', 5);
+var channelHandler = new cast.receiver.ChannelHandler('ca.spacek.chromecast.test.aardvark');
+channelHandler.addChannelFactory(receiver.createChannelFactory('ca.spacek.chromecast.test.aardvark'));
 receiver.start();
 
-window.addEventListener('load', function() {
-	var elem = document.getElementById('vid');
-	remoteMedia.setMediaElement(elem);
+channelHandler.addEventListener(cast.receiver.Channel.EventType.MESSAGE, onMessage);
+
+function onMessage(event) {
+	$('<li />').text(event.message.type)
+		.appendTo($('#messages'));
+}
 });
 	</script>
 	</head>
 	<body>
 		<div class="container">
 			<h1>Test!</h1>
+			<ol id="messages">
+			</ol>
 		</div>
 	</body>
 </html>
