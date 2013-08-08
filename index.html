@@ -1,0 +1,26 @@
+<?DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Chromecast Test</title>
+		<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet">
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
+		<script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
+
+<script type="text/javascript">
+	var receiver = new cast.receiver.Receiver('Aardvark', [ 'ca.spacek.chromecase.test.aardvark' ], '', 5);
+	var remoteMedia = new cast.receiver.RemoteMedia();
+	remoteMedia.addChannelFactory(receiver.createChannelFactory(cast.receiver.RemoteMedia.NAMESPACE));
+
+	receiver.start();
+
+	window.addEventListener('load', function() {
+		var elem = document.getElementById('vid');
+		remoteMedia.setMediaElement(elem);
+	});
+	</script>
+	</head>
+	<body>
+		<h1>Test!</h1>
+	</body>
+</html>
