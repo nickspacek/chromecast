@@ -20,17 +20,13 @@ channelHandler.addChannelFactory(receiver.createChannelFactory('ca.spacek.chrome
 receiver.start();
 
 function onOpen(event) {
-	console.debug(event);
-	$('<li />').text('open', event.message.type)
-		.appendTo($('#messages'));
+	console.debug('channel opened', event);
 }
 function onClose(event) {
-	console.debug(event);
-	$('<li />').text('close', event.message.type)
-		.appendTo($('#messages'));
+	console.debug('channel closed', event);
 }
 function onMessage(event) {
-	console.debug(event);
+	console.debug('message received', event);
 	$('<li />').text(event.message.type)
 		.appendTo($('#messages'));
 }
