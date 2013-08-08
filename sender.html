@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" data-cast-api-enabled="true">
+	<head>
+		<title>Chromecast Test</title>
+		<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet">
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
+
+<script type="text/javascript">
+  //	var receiver = new cast.receiver.Receiver('ae241d56-0944-42ed-b6eb-06c314f5b5a0', [ 'ca.spacek.chromecase.test.aardvark' ], '', 5);
+  var appId = 'ae241d56-0944-42ed-b6eb-06c314f5b5a0';
+  var cast_api, cv_activity;
+
+  if (typeof cast !== 'undefined' && cast.isAvailable) {
+    // Cast is known to be available
+    initializeApi();
+  } else {
+    // Wait for API to post a message to us
+    window.addEventListener("message", function(event) {
+      if (event.source == window && event.data && event.data.source == "CastApi" && event.data.event == "Hello") {
+        initializeApi();
+      }
+    });
+  }
+
+  var initializeApi = function() {
+    cast_api = new cast.Api();
+    cast_api.addReceiverListener(appId, onReceiverList);
+  };
+
+  var onReceiverList = function(receivers) {
+    console.debug(receivers);
+    // If the list is non-empty, show a widget with
+    // the friendly names of receivers.
+    // When a receiver is picked, invoke doLaunch with the receiver.
+    var list = document.getElementById('receivers');
+    receivers.forEach(function (item) {
+      console.debug(item);
+    });
+  };
+
+  var doLaunch = function(receiver) {
+    var request = new cast.LaunchRequest(appId, receiver);
+    request.parameters = "v=abcdefg";
+  
+    request.description = new cast.LaunchDescription();
+    request.description.text = "My Cat Video";
+    request.description.url = "...";
+    cast_api.launch(request, onLaunch);
+  };
+
+  var onLaunch = function(activity) {
+    if (activity.status == "running") {
+      cv_activity = activity;
+      // update UI to reflect that the receiver has received the
+      // launch command and should start video playback.
+    } else if (activity.status == "error") {
+      cv_activity = null;
+    }
+  };
+</script>
+	</head>
+	<body>
+		<h1>Test!</h1>
+    <ol id="receivers"></ol>
+	</body>
+</html>
