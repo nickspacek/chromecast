@@ -28,6 +28,7 @@ $(function () {
 	var onStopResult = function (result) {
 		if (result.status === 'stopped') {
 			cv_activity = null;
+			$('.controls').hide();
 		}
 		else {
 			// unable to stop
