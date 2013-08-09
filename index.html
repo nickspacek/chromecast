@@ -27,8 +27,10 @@ function onClose(event) {
 }
 function onMessage(event) {
 	console.debug('message received', event);
-	$('<li />').text(event.message.type)
-		.appendTo($('#messages'));
+	if (event.message.type === 'text') {
+		$('<li />').text(event.message.content)
+			.appendTo($('#messages'));
+	}
 }
 });
 	</script>

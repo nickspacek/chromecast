@@ -2,22 +2,25 @@
 <html lang="en" data-cast-api-enabled="true">
 	<head>
 		<title>Chromecast Test</title>
-		<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet">
+		<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet" />
+		<link href="style/jquery.cast-receiver-list.css" rel="stylesheet" />
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
+		<script src="script/jquery.cast-receiver-list.js"></script>
 
 <script type="text/javascript">
 $(function () {
-
 	//	var receiver = new cast.receiver.Receiver('ae241d56-0944-42ed-b6eb-06c314f5b5a0', [ 'ca.spacek.chromecase.test.aardvark' ], '', 5);
 	var appId = 'ae241d56-0944-42ed-b6eb-06c314f5b5a0';
 	var cast_api, cv_activity;
+
+	$('.controls').hide();
 
 	$('.stop-button').click(function (e) {
 		e.preventDefault();
 
 		if (cast_api && cv_activity) {
-			cast_api.stopActivity(cv_activity.id, onStopResult);
+			cast_api.stopActivity(cv_activity.activityId, onStopResult);
 			$('.stop-button').attr('disabled', true);
 		}
 	});
@@ -27,7 +30,8 @@ $(function () {
 			cv_activity = null;
 		}
 		else {
-			$('.stop-button').attr('disabled', true);
+			// unable to stop
+			$('.stop-button').removeAttr('disabled');
 		}
 	};
 
@@ -37,7 +41,7 @@ $(function () {
 	} else {
 		// Wait for API to post a message to us
 		window.addEventListener("message", function(event) {
-			if (event.source == window && event.data && event.data.source == "CastApi" && event.data.event == "Hello") {
+			if (event.source == window && event.data && event.data.source === "CastApi" && event.data.event === "Hello") {
 				initializeApi();
 			}
 		});
@@ -46,6 +50,13 @@ $(function () {
 	var initializeApi = function() {
 		cast_api = new cast.Api();
 		cast_api.addReceiverListener(appId, onReceiverList);
+		$('#receivers').receiverList({
+			api: cast_api,
+			appId: appId,
+			click: function (e, receiver) {
+				doLaunch(receiver);
+			}
+		});
 	};
 
 	var theReceivers = {};
@@ -53,31 +64,6 @@ $(function () {
 		receivers.forEach(function (receiver) {
 			theReceivers[receiver.id] = receiver;
 		});
-
-		var list = $('#receivers').on('click', 'button', function (e) {
-		 	e.preventDefault();
-
-			var receiverId = $(this).closest('li').attr('data-id');
-			doLaunch(theReceivers[receiverId]);	
-		});
-
-		list.append(receivers.map(function (item) {
-	 	var listItem = $('<li class="receiver" />')
-			.attr('data-id', item.id);
-
-		var element = $('<div />').appendTo(listItem);
-		$('<span />').text(item.name).appendTo(element);
-		var launcher = $('<button class="btn btn-primary" type="button" />')
-			.text('Launch')
-			.appendTo(element);
-
-		var info = $('<div class="receiver-info" />').appendTo(listItem);
-		$('<span />').text(item.id).appendTo(info);
-		$('<span />').text(item.ipAddress).appendTo(info);
-		$('<span />').text(item.isTabProjected).appendTo(info);
-		
-	 	return listItem;
-		}));
 	};
 
 	var doLaunch = function(receiver) {
@@ -91,18 +77,22 @@ $(function () {
 	};
 
 	var onLaunch = function(activity) {
-		console.debug(activity);
-		if (activity.status == "running") {
-			cv_activity = activity;
-			$('.stop-button').removeAttr('disabled');
-		} else if (activity.status == "error") {
+		if (activity.status === "running") {
+			updateCurrentActivity(activity);
+		} else if (activity.status === "error") {
 			cv_activity = null;
 		}
 	};
 
+	var updateCurrentActivity = function(activity) {
+			cv_activity = activity;
+			$('.stop-button').removeAttr('disabled');
+			$('.controls').show();
+	};
+
 	$('#messager').keyup(function (e) {
 		if (e.keyCode == 13) {
-			cast_api.sendMessage(cv_activity.id, 'ca.spacek.chromecast.test.aardvark', { test: 'blarg', type: 'hello' }, onMessageResult);
+			cast_api.sendMessage(cv_activity.activityId, 'ca.spacek.chromecast.test.aardvark', { type: 'text', content: $(this).val() }, onMessageResult);
 			$(this).val('');
 		}
 	});
@@ -117,8 +107,16 @@ $(function () {
 		<div class="container">
 			<h1>Test!</h1>
 			<button class="stop-button btn btn-danger" disabled>Stop Casting</button>
-			<ol id="receivers"></ol>
-			<input type="text" id="messager" />
+			<h3>Receivers</h3>
+			<div class="row">
+				<div id="receivers" class="col-6">
+				</div>
+			</div>
+
+			<div class="controls">
+				<h3>Send Message</h3>
+				<input type="text" id="messager" />
+			</div>
 		</div>
 	</body>
 </html>
