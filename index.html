@@ -8,15 +8,64 @@
 		<script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
 
 		<script type="text/javascript">
+function Game() {
+	this.player1 = -1;
+	this.player2 = -1;
+	this.currentPlayer = null;
+	
+	this.channelHandler = new cast.receiver.ChannelHandler('ca.spacek.chromecast.test.beluga');
+	this.channelHandler.addEventListener(cast.receiver.Channel.EventType.MESSAGE, this.onMessage.bind(this));
+	this.channelHandler.addEventListener(cast.receiver.Channel.EventType.OPEN, this.onOpen.bind(this));
+	this.channelHandler.addEventListener(cast.receiver.Channel.EventType.CLOSE, this.onClose.bind(this));
+}
+
+Game.prototype = {
+	onMessage: function (e) {
+		var message = e.message;
+		var channel = e.target;
+		console.debug('message received', JSON.stringify(message));
+		console.debug('player1', player1);
+		console.debug('player2', player2);
+		
+		if (message.command === 'join') {
+			this.onJoin(channel, message);
+		}
+		else if (message.command === 'leave') {
+			this.onLeave(channel);
+		}
+		else if (message.command === 'move') {
+			this.onMove(channel, message);
+		}
+		else {
+			cast.log.error('Invalid message command: ' + message.command);
+		}
+	},
+	onOpen: function (e) {
+		console.debug('channel opened, total number of channels: ' + this.channelHandler.getChannels().length);
+	},
+	onClose: function (e) {
+		var count = this.channelHandler.getChannels().length;
+		console.debug('channel closed, total number of channels: ' + count);
+		if (count == 0) {
+			window.close();
+		}
+	},
+	onJoin: function (channel, message) {
+		console.debug('someone joined!');
+	},
+	onLeave: function (channel) {
+		console.debug('someone left!');
+	},
+	onMove: function (channel, message) {
+		console.debug('moving');
+	}
+};
+		
 $(function () {
 var appId = 'ae241d56-0944-42ed-b6eb-06c314f5b5a0';
-var receiver = new cast.receiver.Receiver(appId, [ 'ca.spacek.chromecast.test.aardvark' ], '', 5);
-var channelHandler = new cast.receiver.ChannelHandler('ca.spacek.chromecast.test.aardvark');
-channelHandler.addEventListener(cast.receiver.Channel.EventType.MESSAGE, onMessage);
-channelHandler.addEventListener(cast.receiver.Channel.EventType.OPEN, onOpen);
-channelHandler.addEventListener(cast.receiver.Channel.EventType.CLOSE, onClose);
+var receiver = new cast.receiver.Receiver(appId, [ 'ca.spacek.chromecast.test.beluga' ], '', 5);
 
-channelHandler.addChannelFactory(receiver.createChannelFactory('ca.spacek.chromecast.test.aardvark'));
+channelHandler.addChannelFactory(receiver.createChannelFactory('ca.spacek.chromecast.test.beluga'));
 receiver.start();
 
 function onOpen(event) {
