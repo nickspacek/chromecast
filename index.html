@@ -24,8 +24,6 @@ Game.prototype = {
 		var message = e.message;
 		var channel = e.target;
 		console.debug('message received', JSON.stringify(message));
-		console.debug('player1', this.player1);
-		console.debug('player2', this.player2);
 		
 		if (message.command === 'join') {
 			this.onJoin(channel, message);
@@ -54,18 +52,21 @@ Game.prototype = {
 		}
 	},
 	onJoin: function (channel, message) {
-		console.debug('someone joined!');
 		if (this.players.length >= 10) {
 			console.debug('game is already full!');
 			// TODO send error
 			return;
 		}
-		if (this.findPlayer(channel)) {
-			console.debug('player has already joined!');
+		var existingPlayer = this.findPlayer(channel);
+		if (existingPlayer) {
+			console.debug('player has already joined (connected as ' + existingPlayer.name + '!');
 			// TODO send error
 			return;
 		}
-		this.players.push(this.createPlayer(channel, message));
+		
+		var player = this.createPlayer(channel, message);
+		console.debug(player.name + ' has joined the game!');
+		this.players.push(player);
 	},
 	createPlayer: function (channel, message) {
 		return {
