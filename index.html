@@ -9,8 +9,8 @@
 
 		<script type="text/javascript">
 function Game() {
-	this.player1 = -1;
-	this.player2 = -1;
+	this.players = [];
+	this.maxPlayers = 10;
 	this.currentPlayer = null;
 	
 	this.channelHandler = new cast.receiver.ChannelHandler('ca.spacek.chromecast.test.beluga');
@@ -36,6 +36,9 @@ Game.prototype = {
 		else if (message.command === 'move') {
 			this.onMove(channel, message);
 		}
+		else if (message.command === 'say') {
+			this.onSay(channel, message);
+		}
 		else {
 			cast.log.error('Invalid message command: ' + message.command);
 		}
@@ -52,6 +55,42 @@ Game.prototype = {
 	},
 	onJoin: function (channel, message) {
 		console.debug('someone joined!');
+		if (this.players.length >= 10) {
+			console.debug('game is already full!');
+			// TODO send error
+			return;
+		}
+		if (this.channelHasPlayer(channel)) {
+			console.debug('player has already joined!');
+			// TODO send error
+			return;
+		}
+		this.players.push(this.createPlayer(channel, message));
+	},
+	createPlayer: function (channel, message) {
+		return {
+			name: message.name,
+			channel: channel
+		};
+	},
+	onSay: function (channel, message) {
+		var player = this.findPlayer(channel);
+		if (!player) {
+			console.debug("someone tried to say something but they haven't joined the game!");
+			// TODO send error
+			return;
+		}
+		
+		this.broadcast({
+			event: 'say',
+			player: player.name,
+			content: message.content
+		});
+	},
+	broadcast: function (message) {
+		this.channelHandler.getChannels().forEach(function (channel) {
+			channel.send(message);
+		});
 	},
 	onLeave: function (channel) {
 		console.debug('someone left!');
