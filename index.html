@@ -24,8 +24,8 @@ Game.prototype = {
 		var message = e.message;
 		var channel = e.target;
 		console.debug('message received', JSON.stringify(message));
-		console.debug('player1', player1);
-		console.debug('player2', player2);
+		console.debug('player1', this.player1);
+		console.debug('player2', this.player2);
 		
 		if (message.command === 'join') {
 			this.onJoin(channel, message);
