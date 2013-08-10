@@ -87,6 +87,15 @@ Game.prototype = {
 			content: message.content
 		});
 	},
+	findPlayer: function (channel) {
+		var existingPlayer = null;
+		this.players.forEach(function (player) {
+			if (player.channel == channel) {
+				existingPlayer = player;
+			}
+		});
+		return existingPlayer;
+	},
 	broadcast: function (message) {
 		this.channelHandler.getChannels().forEach(function (channel) {
 			channel.send(message);
