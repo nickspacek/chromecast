@@ -60,7 +60,7 @@ Game.prototype = {
 			// TODO send error
 			return;
 		}
-		if (this.channelHasPlayer(channel)) {
+		if (this.findPlayer(channel)) {
 			console.debug('player has already joined!');
 			// TODO send error
 			return;
