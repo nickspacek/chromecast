@@ -53,6 +53,10 @@ UI.prototype.update = function(receivers) {
 		this.emptyMessage.show();
 		return;
 	}
+	else {
+	    this.receiverList.show();
+	    this.emptyMessage.hide();
+	}
 	
 	this.receiverList.append(receivers
 		.filter(function (item) { return typeof self.receivers[item.id] === 'undefined' })

@@ -31,6 +31,9 @@ function onMessage(event) {
 		$('<li />').text(event.message.content)
 			.appendTo($('#messages'));
 	}
+	else if (event.message.type === 'image') {
+		$('img').attr('src', event.message.content);
+	}
 }
 });
 	</script>
@@ -40,8 +43,8 @@ function onMessage(event) {
 			<h1>Test!</h1>
 			<ol id="messages">
 			</ol>
-			<iframe src="http://www.google.ca"></iframe>
-			<iframe src="http://www.reddit.com"></iframe>
+			<h3>Current image</h3>
+			<img src="image/no-image.png" alt="" />
 		</div>
 	</body>
 </html>

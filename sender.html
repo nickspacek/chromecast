@@ -10,7 +10,6 @@
 
 <script type="text/javascript">
 $(function () {
-	//	var receiver = new cast.receiver.Receiver('ae241d56-0944-42ed-b6eb-06c314f5b5a0', [ 'ca.spacek.chromecase.test.aardvark' ], '', 5);
 	var appId = 'ae241d56-0944-42ed-b6eb-06c314f5b5a0';
 	var cast_api, cv_activity;
 
@@ -37,10 +36,8 @@ $(function () {
 	};
 
 	if (typeof cast !== 'undefined' && cast.isAvailable) {
-		// Cast is known to be available
 		initializeApi();
 	} else {
-		// Wait for API to post a message to us
 		window.addEventListener("message", function(event) {
 			if (event.source == window && event.data && event.data.source === "CastApi" && event.data.event === "Hello") {
 				initializeApi();
@@ -86,9 +83,9 @@ $(function () {
 	};
 
 	var updateCurrentActivity = function(activity) {
-			cv_activity = activity;
-			$('.stop-button').removeAttr('disabled');
-			$('.controls').show();
+		cv_activity = activity;
+		$('.stop-button').removeAttr('disabled');
+		$('.controls').show();
 	};
 
 	$('#messager').keyup(function (e) {
@@ -101,6 +98,20 @@ $(function () {
 	var onMessageResult = function (result) {
 		console.debug(result);
 	};
+	
+	$('#file').on('change', function (e) {
+		var file = e.originalEvent.target.files[0];
+		var reader = new FileReader();
+		
+		reader.onload = function (event) {
+			console.debug('loaded', event.target.result);
+			cast_api.sendMessage(cv_activity, 'ca.spacek.chromecast.test.aardvark', {
+				type: 'image',
+				content: event.target.result
+			}, onMessageResult);
+		};
+		reader.readAsDataURL(file);
+	});
 });
 </script>
 	</head>
@@ -117,6 +128,8 @@ $(function () {
 			<div class="controls">
 				<h3>Send Message</h3>
 				<input type="text" id="messager" />
+				<h3>Load Image</h3>
+				<input type="file" id="file" />
 			</div>
 		</div>
 	</body>
