@@ -65,25 +65,9 @@ $(function () {
 var appId = 'ae241d56-0944-42ed-b6eb-06c314f5b5a0';
 var receiver = new cast.receiver.Receiver(appId, [ 'ca.spacek.chromecast.test.beluga' ], '', 5);
 
-channelHandler.addChannelFactory(receiver.createChannelFactory('ca.spacek.chromecast.test.beluga'));
+var game = new Game();
+game.channelHandler.addChannelFactory(receiver.createChannelFactory('ca.spacek.chromecast.test.beluga'));
 receiver.start();
-
-function onOpen(event) {
-	console.debug('channel opened', event);
-}
-function onClose(event) {
-	console.debug('channel closed', event);
-}
-function onMessage(event) {
-	console.debug('message received', event);
-	if (event.message.type === 'text') {
-		$('<li />').text(event.message.content)
-			.appendTo($('#messages'));
-	}
-	else if (event.message.type === 'image') {
-		$('img').attr('src', event.message.content);
-	}
-}
 });
 	</script>
 	</head>
