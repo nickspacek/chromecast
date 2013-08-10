@@ -90,7 +90,7 @@ $(function () {
 
 	$('#messager').keyup(function (e) {
 		if (e.keyCode == 13) {
-			cast_api.sendMessage(cv_activity.activityId, 'ca.spacek.chromecast.test.aardvark', { type: 'text', content: $(this).val() }, onMessageResult);
+			sendMessage('text', $(this).val());
 			$(this).val('');
 		}
 	});
@@ -99,16 +99,19 @@ $(function () {
 		console.debug(result);
 	};
 	
+	var sendMessage = function (type, content) {
+		cast_api.sendMessage(cv_activity.activityId, 'ca.spacek.chromecast.test.aardvark', {
+			type: type,
+			content: content
+		}, onMessageResult);
+	};
+	
 	$('#file').on('change', function (e) {
 		var file = e.originalEvent.target.files[0];
 		var reader = new FileReader();
 		
 		reader.onload = function (event) {
-			console.debug('loaded', event.target.result);
-			cast_api.sendMessage(cv_activity, 'ca.spacek.chromecast.test.aardvark', {
-				type: 'image',
-				content: event.target.result
-			}, onMessageResult);
+			sendMessage('image', event.target.result);
 		};
 		reader.readAsDataURL(file);
 	});
