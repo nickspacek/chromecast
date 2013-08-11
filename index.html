@@ -98,6 +98,7 @@ Game.prototype = {
 		return existingPlayer;
 	},
 	broadcast: function (message) {
+		message.timestamp = new Date();
 		this.channelHandler.getChannels().forEach(function (channel) {
 			channel.send(message);
 		});

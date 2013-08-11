@@ -4,130 +4,243 @@
 		<title>Chromecast Test</title>
 		<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet" />
 		<link href="style/jquery.cast-receiver-list.css" rel="stylesheet" />
+		<link href="style/jquery.chat.css" rel="stylesheet" />
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
 		<script src="script/jquery.cast-receiver-list.js"></script>
 		<script src="script/crafty.js"></script>
 
 <script type="text/javascript">
-$(function () {
-	var appId = 'ae241d56-0944-42ed-b6eb-06c314f5b5a0';
-	var cast_api, cv_activity;
+// TODO point this someplace common
+var appId = 'ae241d56-0944-42ed-b6eb-06c314f5b5a0';
+var namespace = 'ca.spacek.chromecast.test.beluga';
 
-	$('.controls').hide();
+(function ($) {
+function Chat(element) {
+	this.element = $(element);
+	this._create();
+	this._registerEvents();
+}
 
-	$('.stop-button').click(function (e) {
-		e.preventDefault();
-
-		if (cast_api && cv_activity) {
-			cast_api.stopActivity(cv_activity.activityId, onStopResult);
-			$('.stop-button').attr('disabled', true);
+Chat.prototype = {
+	_create: function () {
+		this.element.addClass('chat panel panel-info');
+		this.header = $('<div class="panel-heading" />')
+			.appendTo(this.element);
+		this.title = $('<h3 class="panel-title" />')
+			.text('Chat')
+			.appendTo(this.header);
+		this.log = $('<ol class="chat-log list-unstyled" />')
+			.appendTo(this.element);
+		this.input = $('<input type="text" class="chat-input form-control" />')
+			.appendTo(this.element);
+	},
+	_registerEvents: function () {
+		var self = this;
+		this.input.on('keyup', function (e) {
+			if (e.keyCode == 13) {
+				self.element.trigger('chat.message', $(this).val());
+				$(this).val('');
+			}
+		});
+	},
+	add: function (chat) {
+		var listItem = $('<li class="chat-message" />')
+			.attr('data-timestamp', chat.timestamp);
+		$('<span class="chat-message-sender" />')
+			.text(chat.sender)
+			.appendTo(listItem);
+		$('<span class="chat-message-text" />')
+			.text(chat.text)
+			.appendTo(listItem);
+		listItem.appendTo(this.log);
+	}
+};
+$.fn.chat = function () {
+	var args = $.makeArray(arguments);
+	var methodName = arguments[0];
+	var exists = false;
+	if (typeof methodName === 'string' && methodName[0] !== '_') {
+		exists = typeof Chat.prototype[methodName] === 'function';
+		args.shift();
+	}
+	return this.each(function () {
+		var chat = $(this).data('chat');
+		if (exists) {
+			chat[methodName].apply(chat, args);
+		}
+		else if (typeof chat === 'undefined') {
+			$(this).data('chat', new Chat(this));
 		}
 	});
+};
+})(jQuery);
+
+function GameClient(activity, api) {
+	this.activity = activity;
+	this.api = api;
+	api.addMessageListener(activity.activityId, namespace, this.onMessage.bind(this));
+	this.joined = false;
+	this.playerName;
+}
+
+GameClient.prototype = {
+	onMessage: function (message) {
+		if (message.event === 'say') {
+			this.onSayEvent(message);
+		}
+	},
+	bind: function (event, handler) {
+		$(window).bind('gc.' + event, handler);
+	},
+	onSayEvent: function (message) {
+		$(window).trigger('gc.say', message);
+	},
+	join: function (name, callback) {
+		if (!name) {
+			throw 'Must provide a name';
+		}
+		if (this.joined) {
+			throw 'Already in the game!';
+		}
+		this.playerName = name;
+		this.sendMessage('join', { name: name }, callback);
+	},
+	leave: function (callback) {
+		this.sendMessage('leave', callback);
+	},
+	say: function (text) {
+		this.sendMessage('say', { content: text });
+	},
 	
-	var joinButtons = $('.join-button').click(function (e) {
-		e.preventDefault();
-		if (cast_api && cv_activity) {
-			sendMessage('join', { name: 'Nick' }, function (result) {
-				if (result.status === 'success') {
-					joinButtons.attr('disabled', true);
-				}
-			});
-		}
-	});
+	sendMessage: function (command, attrs, callback) {
+		this.api.sendMessage(this.activity.activityId, namespace,
+			$.extend({ command: command }, attrs), callback);
+	}
+};
 
-	var onStopResult = function (result) {
+function UI(element) {
+	this.element = $(element).hide();
+	
+	this.header = $('<h3>')
+		.text('Connected to game!')
+		.appendTo(this.element);
+	
+	var self = this;
+	this.disconnectButton = $('<button class="disconnect-button btn btn-danger btn-xs" />')
+		.text('Disconnect')
+		.click(function (e) {
+			e.preventDefault();
+
+			self.api.stopActivity(self.activity.activityId, onStopResult);
+			self.disconnectButton.attr('disabled', true);
+		})
+		.appendTo(this.element);
+
+	this.nameInput = $('<input type="text" class="form-control" />')
+		.attr('placeholder', 'Type your name and press enter')
+		.appendTo(this.element)
+		.on('keyup', function (e) {
+			if (e.keyCode == 13) {
+				self.gameClient.join(self.nameInput.val());
+				self.nameInput.hide();
+				self.chat.show();
+			}
+		});
+
+	this.chat = $('<div class="chat" />')
+		.appendTo(this.element)
+		.hide();
+	
+	this.chat = $('.chat').chat().bind('chat.message', function (e, text) {
+		self.gameClient.say(text);
+	});
+}
+
+UI.prototype = {
+	initialize: function () {
+		this.api = new cast.Api();
+		
+		this.receivers = $('#receivers').receiverList({
+			api: this.api,
+			appId: appId,
+			click: this.onReceiverSelected.bind(this)
+		});
+	},
+	
+	onReceiverSelected: function (e, receiver) {
+		this.doLaunch(receiver);
+	},
+	
+	doLaunch: function(receiver) {
+		var request = new cast.LaunchRequest(appId, receiver);
+		this.api.launch(request, this.onLaunch.bind(this));
+	},
+	
+	onStopResult: function (result) {
 		if (result.status === 'stopped') {
-			cv_activity = null;
-			$('.controls').hide();
+			this.activity = null;
+			this.gameClient = null;
+			this.gameUI.hide();
 		}
 		else {
 			// unable to stop
-			$('.stop-button').removeAttr('disabled');
+			this.stopButton.removeAttr('disabled');
 		}
-	};
+	},
+	
+	onLaunch: function(activity) {
+		if (activity.status === "running") {
+			this.updateCurrentActivity(activity);
+		} else if (activity.status === "error") {
+			this.activity = null;
+		}
+	},
 
+	updateCurrentActivity: function(activity) {
+		this.activity = activity;
+		this.gameClient = new GameClient(this.activity, this.api);
+		this.disconnectButton.removeAttr('disabled');
+		this.element.show();
+
+		var self = this;
+		this.gameClient.bind('say', function (e, message) {
+			var sender = self.gameClient.playerName === message.player ? 'You' : message.player;
+			self.chat.chat('add', {
+				sender: sender,
+				text: message.content,
+				timestamp: message.timestamp
+			});
+		});
+	}
+};
+
+$(function () {
+	var messageStart;
+	var ui = new UI($('.game-ui'));
+	
 	if (typeof cast !== 'undefined' && cast.isAvailable) {
-		initializeApi();
+		ui.initialize();
 	} else {
 		window.addEventListener("message", function(event) {
 			if (event.source == window && event.data && event.data.source === "CastApi" && event.data.event === "Hello") {
-				initializeApi();
+				ui.initialize();
 			}
 		});
 	}
-
-	var initializeApi = function() {
-		cast_api = new cast.Api();
-		cast_api.addReceiverListener(appId, onReceiverList);
-		$('#receivers').receiverList({
-			api: cast_api,
-			appId: appId,
-			click: function (e, receiver) {
-				doLaunch(receiver);
-			}
-		});
-	};
-
-	var theReceivers = {};
-	var onReceiverList = function(receivers) {
-		receivers.forEach(function (receiver) {
-			theReceivers[receiver.id] = receiver;
-		});
-	};
-
-	var doLaunch = function(receiver) {
-		var request = new cast.LaunchRequest(appId, receiver);
-		request.parameters = "v=abcdefg";
-	
-		request.description = new cast.LaunchDescription();
-		request.description.text = "My Cat Video";
-		request.description.url = "...";
-		cast_api.launch(request, onLaunch);
-	};
-
-	var onLaunch = function(activity) {
-		if (activity.status === "running") {
-			updateCurrentActivity(activity);
-		} else if (activity.status === "error") {
-			cv_activity = null;
-		}
-	};
-
-	var updateCurrentActivity = function(activity) {
-		cv_activity = activity;
-		$('.stop-button').removeAttr('disabled');
-		$('.controls').show();
-	};
-
-	$('#messager').keyup(function (e) {
-		if (e.keyCode == 13) {
-			sendMessage('text', $(this).val());
-			$(this).val('');
-		}
-	});
-	
-	var sendMessage = function (command, attrs, callback) {
-		cast_api.sendMessage(cv_activity.activityId, 'ca.spacek.chromecast.test.beluga',
-			$.extend({ command: command }, attrs), callback);
-	};
 });
 </script>
 	</head>
 	<body>
 		<div class="container">
-			<h1>Test!</h1>
-			<button class="stop-button btn btn-danger" disabled>Stop Casting</button>
-			<h3>Receivers</h3>
+			<h1>Cast Project Beluga</h1>
+			<h3>Select device to Cast</h3>
 			<div class="row">
 				<div id="receivers" class="col-6">
 				</div>
 			</div>
-
-			<div class="controls">
-				Connected
-				<button type="button" class="btn btn-primary join-button">Join Game</button>
-			</div>
+			
+			<div class="game-ui"></div>
 		</div>
 	</body>
 </html>

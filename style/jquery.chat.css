@@ -1,0 +1,8 @@
+ol.chat-log {
+	min-height: 8em;
+}
+
+span.chat-message-sender {
+	font-weight: bold;
+	padding-right: .25em;
+}
