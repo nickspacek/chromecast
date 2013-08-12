@@ -1,0 +1,6 @@
+[submodule "lib/cast-receiver-list"]
+	path = lib/cast-receiver-list
+	url = https://github.com/nickspacek/cast-receiver-list.git
+[submodule "lib/bootstrap"]
+	path = lib/bootstrap
+	url = https://github.com/nickspacek/twitter-bootstrap-compiled.git
