@@ -3,8 +3,9 @@
 	<head>
 		<title>Chromecast Test</title>
 		<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet" />
-		<link href="style/jquery.cast-receiver-list.css" rel="stylesheet" />
+		<link href="lib/cast-receiver-list/jquery.cast-receiver-list.css" rel="stylesheet" />
 		<link href="style/jquery.chat.css" rel="stylesheet" />
+
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
 		<script src="lib/crafty.js/crafty.js"></script>
@@ -18,7 +19,7 @@
 <script type="text/javascript">
 $(function () {
 	var messageStart;
-	var ui = new UI($('.game-ui'));
+	var ui = new ca.spacek.chromecast.beluga.UI($('.game-ui'));
 	
 	if (typeof cast !== 'undefined' && cast.isAvailable) {
 		ui.initialize();

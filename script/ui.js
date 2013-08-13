@@ -12,7 +12,7 @@ function UI(element) {
 		.click(function (e) {
 			e.preventDefault();
 
-			self.api.stopActivity(self.activity.activityId, onStopResult);
+			self.api.stopActivity(self.activity.activityId, self.onStopResult.bind(self));
 			self.disconnectButton.attr('disabled', true);
 		})
 		.appendTo(this.element);
@@ -61,7 +61,7 @@ UI.prototype = {
 		if (result.status === 'stopped') {
 			this.activity = null;
 			this.gameClient = null;
-			this.gameUI.hide();
+			this.element.hide();
 		}
 		else {
 			// unable to stop
@@ -79,8 +79,10 @@ UI.prototype = {
 
 	updateCurrentActivity: function(activity) {
 		this.activity = activity;
-		this.gameClient = new GameClient(this.activity, this.api);
+		this.gameClient = new ca.spacek.chromecast.beluga.GameClient(this.activity, this.api);
 		this.disconnectButton.removeAttr('disabled');
+		this.chat.hide();
+		this.nameInput.show();
 		this.element.show();
 
 		var self = this;
