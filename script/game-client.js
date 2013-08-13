@@ -1,11 +1,14 @@
 ca.spacek.chromecast.beluga.GameClient = (function () {
 function GameClient(activity, api) {
+	this.id = GameClient.nextId++;
 	this.activity = activity;
 	this.api = api;
 	api.addMessageListener(activity.activityId, ca.spacek.chromecast.beluga.namespace, this.onMessage.bind(this));
 	this.joined = false;
 	this.playerName;
 }
+
+GameClient.nextId = 0;
 
 GameClient.prototype = {
 	onMessage: function (message) {
@@ -14,10 +17,10 @@ GameClient.prototype = {
 		}
 	},
 	bind: function (event, handler) {
-		$(window).bind('gc.' + event, handler);
+		$(window).bind(this._e(event), handler);
 	},
 	onSayEvent: function (message) {
-		$(window).trigger('gc.say', message);
+		$(window).trigger(this._e('say'), message);
 	},
 	join: function (name, callback) {
 		if (!name) {
@@ -39,6 +42,10 @@ GameClient.prototype = {
 	sendMessage: function (command, attrs, callback) {
 		this.api.sendMessage(this.activity.activityId, ca.spacek.chromecast.beluga.namespace,
 			$.extend({ command: command }, attrs), callback);
+	},
+
+	_e: function (eventName) {
+		return 'gc-' + this.id + '.' + eventName;
 	}
 };
 
